@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DexT3 + Angel One Trading Matrix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(17, 24, 39, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover: rgba(255, 255, 255, 0.12);
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #38bdf8;
+      --green: #10b981;
+      --green-bg: rgba(16, 185, 129, 0.15);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.15);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.15);
+      --blue: #6366f1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding: 1.5rem;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--card-border);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0284c7, #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+
+    .brand h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+    .brand p { font-size: 0.8rem; color: var(--text-muted); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+    }
+    .status-active { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+    .status-delayed { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+    .status-stale { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .status-mock { background: rgba(147, 51, 234, 0.15); color: #c084fc; border: 1px solid rgba(147, 51, 234, 0.3); }
+
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .toggle-wrap input { cursor: pointer; }
+
+    .grid-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      position: relative;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .metric-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .metric-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-container {
+      position: relative;
+      height: 320px;
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .signal-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .signal-pill {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      text-align: center;
+      margin: 0.5rem 0;
+    }
+    .sig-call { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16,185,129,0.4); }
+    .sig-put { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239,68,68,0.4); }
+    .sig-wait { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--card-border); }
+
+    .verdict-box {
+      background: rgba(0,0,0,0.3);
+      border: 1px dashed var(--card-border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      margin-top: 0.5rem;
+      color: #38bdf8;
+    }
+
+    .factors-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+    }
+    .factor-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.35rem 0.5rem;
+      background: rgba(255,255,255,0.02);
+      border-radius: 6px;
+    }
+
+    /* Chain Table Styling */
+    .table-card {
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 0.75rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      text-align: right;
+    }
+    th {
+      background: rgba(0,0,0,0.4);
+      padding: 0.6rem 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--card-border);
+    }
+    th.strike-th { text-align: center; color: var(--accent); }
+    td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    td.strike-td {
+      text-align: center;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.04);
+    }
+    tr.atm-row {
+      background: rgba(245, 158, 11, 0.12) !important;
+      font-weight: 700;
+    }
+    tr:hover { background: rgba(255,255,255,0.02); }
+
+    .call-head { border-top: 2px solid var(--green); }
+    .put-head { border-top: 2px solid var(--red); }
+
+    .log-terminal {
+      background: #040711;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      height: 180px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: #94a3b8;
+    }
+    .log-line-warn { color: var(--amber); }
+    .log-line-err { color: var(--red); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">D3</div>
+      <div>
+        <h1>DexT3 + Angel One Intelligence Matrix</h1>
+        <p>Order Flow Confluence • Read-Only Live Monitoring</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <label class="toggle-wrap">
+        <input type="checkbox" id="mockToggle" onchange="fetchData()">
+        Include Mock Data
+      </label>
+      <div id="statusBadge" class="status-badge status-active">
+        <span id="statusDot">●</span> <span id="statusText">CONNECTING</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Top Metrics -->
+  <section class="grid-metrics">
+    <div class="card">
+      <div class="card-title">NIFTY Spot Price</div>
+      <div class="metric-value" id="spotPrice">--</div>
+      <div class="metric-sub" id="spotTime">Waiting for data...</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Angel Put/Call Ratio (OI)</div>
+      <div class="metric-value" id="pcrValue">--</div>
+      <div class="metric-sub" id="pcrBias">Bias: --</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Max Pain & Range</div>
+      <div class="metric-value" id="maxPainValue">--</div>
+      <div class="metric-sub" id="rangeValue">Supp: -- | Res: --</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Fresh Writing (Max OI Add)</div>
+      <div class="metric-value" id="freshWritingValue" style="font-size: 1.15rem;">--</div>
+      <div class="metric-sub" id="journalModeSub">Journal: --</div>
+    </div>
+  </section>
+
+  <!-- Main Signal & Chart Row -->
+  <section class="main-grid">
+    <!-- Chart Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>Order Flow & Confluence Trajectory</span>
+        <span style="font-size: 0.7rem; color: var(--text-muted);">IST (Asia/Kolkata)</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="signalsChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Active Signal & Confluence Card -->
+    <div class="card signal-card">
+      <div>
+        <div class="card-title">Active Signal Engine Decision</div>
+        <div id="signalPill" class="signal-pill sig-wait">INITIALIZING</div>
+        <div style="font-size: 0.8rem; margin: 0.4rem 0;">
+          Confidence: <strong id="confidenceVal">--</strong> | Strike: <strong id="strikeVal">--</strong>
+        </div>
+        <div class="verdict-box" id="confluenceVerdict">
+          No confluence verdict available yet.
+        </div>
+        <div class="factors-grid" id="factorsGrid"></div>
+      </div>
+      <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 1rem; border-top: 1px solid var(--card-border); padding-top: 0.5rem;">
+        Last Cycle: <span id="cycleTime">--</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Angel One Option Chain Snapshot -->
+  <section class="card table-card">
+    <div class="card-title">
+      <span>Angel One Near-ATM Option Chain</span>
+      <span id="chainBadge" style="font-size: 0.75rem; color: var(--accent);"></span>
+    </div>
+    <div class="table-wrap">
+      <table id="chainTable">
+        <thead>
+          <tr>
+            <th colspan="3" class="call-head" style="text-align: center;">CALLS (CE)</th>
+            <th class="strike-th">STRIKE</th>
+            <th colspan="3" class="put-head" style="text-align: center;">PUTS (PE)</th>
+          </tr>
+          <tr>
+            <th>OI Chg</th>
+            <th>OI</th>
+            <th>LTP</th>
+            <th class="strike-th">NIFTY</th>
+            <th>LTP</th>
+            <th>OI</th>
+            <th>OI Chg</th>
+          </tr>
+        </thead>
+        <tbody id="chainBody">
+          <tr><td colspan="7" style="text-align:center; padding: 2rem;">Loading option chain matrix...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Paper Trades Table -->
+  <section class="card table-card">
+    <div class="card-title">
+      <span>Paper Trades Execution Ledger</span>
+      <span id="tradeCount" style="color: var(--text-muted); font-size: 0.75rem;"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align: left;">ID / Type</th>
+            <th>Strike</th>
+            <th>Entry</th>
+            <th>Current</th>
+            <th>P&L (Pts)</th>
+            <th>P&L (INR)</th>
+            <th>Status</th>
+            <th style="text-align: left;">Opened (IST)</th>
+          </tr>
+        </thead>
+        <tbody id="tradesBody">
+          <tr><td colspan="8" style="text-align:center; padding: 1.5rem;">No paper trades found.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Logs Monitor -->
+  <section class="card">
+    <div class="card-title">Bot Operational Diagnostics (Redacted Warnings & Errors)</div>
+    <div class="log-terminal" id="logTerminal">Scanning bot logs...</div>
+  </section>
+
+  <script>
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatIST(isoOrUtc) {
+      if (!isoOrUtc) return '--';
+      try {
+        let str = String(isoOrUtc).trim();
+        // If string lacks timezone specifier (Z or +offset or -offset), treat as UTC from SQLite
+        if (!str.endsWith('Z') && !str.includes('+') && !/-\d{2}:\d{2}$/.test(str)) {
+          str = str.replace(' ', 'T') + 'Z';
+        }
+        const d = new Date(str);
+        if (isNaN(d.getTime())) return escapeHtml(isoOrUtc);
+        return d.toLocaleTimeString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+      } catch (e) {
+        return escapeHtml(isoOrUtc);
+      }
+    }
+
+    let chartInstance = null;
+
+    function initChart() {
+      const ctx = document.getElementById('signalsChart').getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Underlying Price',
+              data: [],
+              borderColor: '#38bdf8',
+              backgroundColor: 'rgba(56, 189, 248, 0.1)',
+              borderWidth: 2,
+              pointRadius: 3,
+              tension: 0.2,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Confidence (%)',
+              data: [],
+              borderColor: '#10b981',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              pointRadius: 0,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#9ca3af', font: { family: 'JetBrains Mono', size: 10 } }
+            },
+            y: {
+              position: 'left',
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#38bdf8', font: { family: 'JetBrains Mono', size: 10 } }
+            },
+            y1: {
+              position: 'right',
+              min: 0,
+              max: 100,
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#10b981', font: { family: 'JetBrains Mono', size: 10 } }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: { color: '#f3f4f6', font: { family: 'Plus Jakarta Sans', size: 11 } }
+            }
+          }
+        }
+      });
+    }
+
+    async function fetchData() {
+      const includeMock = document.getElementById('mockToggle').checked;
+      const q = includeMock ? '?include_mock=true' : '';
+
+      try {
+        // 1. Status
+        const resStatus = await fetch('/api/status');
+        if (resStatus.ok) {
+          const s = await resStatus.json();
+          const badge = document.getElementById('statusBadge');
+          const stext = document.getElementById('statusText');
+          stext.textContent = s.bot_status + (s.last_signal && s.last_signal.is_mock ? ' (MOCK)' : '');
+          if (s.bot_status === 'ACTIVE') {
+            badge.className = 'status-badge status-active';
+          } else if (s.bot_status === 'DELAYED') {
+            badge.className = 'status-badge status-delayed';
+          } else {
+            badge.className = 'status-badge status-stale';
+          }
+          document.getElementById('journalModeSub').textContent = 'Journal: ' + escapeHtml(s.journal_mode) + ' | DB: ' + (Number(s.db_size_bytes)/1024).toFixed(1) + ' KB';
+        }
+
+        // 2. Latest Signal
+        const resSig = await fetch('/api/latest');
+        if (resSig.ok) {
+          const sig = await resSig.json();
+          if (sig.signal) {
+            document.getElementById('spotPrice').textContent = Number(sig.underlying_price || 0).toFixed(2);
+            document.getElementById('spotTime').textContent = 'Cycle: ' + formatIST(sig.created_at || sig.timestamp);
+            document.getElementById('confidenceVal').textContent = (Number(sig.confidence || 0) * 100).toFixed(0) + '%';
+            document.getElementById('strikeVal').textContent = sig.strike ? (Number(sig.strike) + ' ' + escapeHtml(sig.option_type || '')) : 'N/A';
+            document.getElementById('cycleTime').textContent = formatIST(sig.created_at || sig.timestamp);
+
+            const pill = document.getElementById('signalPill');
+            pill.textContent = escapeHtml(sig.signal);
+            pill.className = 'signal-pill ' + (sig.signal.includes('CALL') ? 'sig-call' : sig.signal.includes('PUT') ? 'sig-put' : 'sig-wait');
+
+            // Verdict
+            const verdict = (sig.factors && sig.factors.confluence_verdict) || sig.reason || 'Confluence pending';
+            document.getElementById('confluenceVerdict').textContent = verdict;
+
+            // Factors Breakdown
+            const fg = document.getElementById('factorsGrid');
+            fg.innerHTML = '';
+            if (sig.factors) {
+              const keys = ['order_flow_score', 'option_chain_score', 'liquidity_score', 'trend_score'];
+              keys.forEach(k => {
+                if (k in sig.factors) {
+                  fg.innerHTML += `
+                    <div class="factor-item">
+                      <span style="color:var(--text-muted);">${escapeHtml(k.replace('_score',''))}</span>
+                      <strong>${Number(sig.factors[k]).toFixed(2)}</strong>
+                    </div>`;
+                }
+              });
+            }
+          }
+        }
+
+        // 3. Chain Snapshot
+        const resChain = await fetch('/api/chain/latest' + q);
+        if (resChain.ok) {
+          const chain = await resChain.json();
+          const badge = document.getElementById('chainBadge');
+          const tbody = document.getElementById('chainBody');
+
+          if (chain.status === 'EMPTY' || !chain.strikes || chain.strikes.length === 0) {
+            badge.textContent = 'NO LIVE SNAPSHOT';
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color:var(--text-muted);">
+              ${escapeHtml(chain.message || 'No live option chain data recorded.')}
+            </td></tr>`;
+            document.getElementById('pcrValue').textContent = '--';
+            document.getElementById('maxPainValue').textContent = '--';
+            document.getElementById('freshWritingValue').textContent = 'CE: n/a | PE: n/a';
+          } else {
+            badge.textContent = chain.is_mock ? 'SYNTHETIC MOCK' : ('EXPIRY: ' + escapeHtml(chain.expiry));
+            const sum = chain.summary || {};
+            document.getElementById('pcrValue').textContent = Number(sum.pcr_oi || chain.pcr_oi || 0).toFixed(2);
+            document.getElementById('pcrBias').textContent = 'Bias: ' + escapeHtml(sum.bias || chain.bias || 'NEUTRAL');
+            document.getElementById('maxPainValue').textContent = Number(sum.max_pain || chain.max_pain || 0).toFixed(0);
+            document.getElementById('rangeValue').textContent = 'Supp: ' + Number(sum.support || chain.support || 0) + ' | Res: ' + Number(sum.resistance || chain.resistance || 0);
+
+            const ceBuild = sum.fresh_call_writing !== undefined ? sum.fresh_call_writing : 'n/a';
+            const peBuild = sum.fresh_put_writing !== undefined ? sum.fresh_put_writing : 'n/a';
+            document.getElementById('freshWritingValue').textContent = 'CE: ' + escapeHtml(ceBuild) + ' | PE: ' + escapeHtml(peBuild);
+
+            // Populate rows
+            const spot = Number(chain.spot || 0);
+            let rowsHtml = '';
+            chain.strikes.forEach(s => {
+              const strike = Number(s.strike || 0);
+              const isAtm = Math.abs(strike - spot) <= 25;
+              const ceOiChg = Number(s.ce_oi_chg || 0);
+              const peOiChg = Number(s.pe_oi_chg || 0);
+
+              rowsHtml += `
+                <tr class="${isAtm ? 'atm-row' : ''}">
+                  <td style="color:${ceOiChg > 0 ? 'var(--green)' : ceOiChg < 0 ? 'var(--red)' : 'var(--text-muted)'}">${ceOiChg > 0 ? '+' : ''}${ceOiChg}</td>
+                  <td>${Number(s.ce_oi || 0).toLocaleString()}</td>
+                  <td style="color:var(--accent); font-weight:600;">${Number(s.ce_ltp || 0).toFixed(2)}</td>
+                  <td class="strike-td">${strike}</td>
+                  <td style="color:var(--accent); font-weight:600;">${Number(s.pe_ltp || 0).toFixed(2)}</td>
+                  <td>${Number(s.pe_oi || 0).toLocaleString()}</td>
+                  <td style="color:${peOiChg > 0 ? 'var(--green)' : peOiChg < 0 ? 'var(--red)' : 'var(--text-muted)'}">${peOiChg > 0 ? '+' : ''}${peOiChg}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = rowsHtml;
+          }
+        }
+
+        // 4. History for Chart
+        const resHist = await fetch('/api/history' + (includeMock ? '?include_mock=true&limit=30' : '?limit=30'));
+        if (resHist.ok) {
+          const hist = await resHist.json();
+          hist.reverse(); // chronological
+          const labels = hist.map(h => formatIST(h.created_at || h.timestamp));
+          const prices = hist.map(h => Number(h.underlying_price || 0));
+          const confs = hist.map(h => Number(h.confidence || 0) * 100);
+
+          if (chartInstance) {
+            chartInstance.data.labels = labels;
+            chartInstance.data.datasets[0].data = prices;
+            chartInstance.data.datasets[1].data = confs;
+            chartInstance.update();
+          }
+        }
+
+        // 5. Trades
+        const resTrades = await fetch('/api/trades' + q);
+        if (resTrades.ok) {
+          const trades = await resTrades.json();
+          const tBody = document.getElementById('tradesBody');
+          document.getElementById('tradeCount').textContent = trades.length + ' Recorded';
+          if (trades.length === 0) {
+            tBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 1.5rem;">No paper trades found.</td></tr>';
+          } else {
+            let trHtml = '';
+            trades.forEach(t => {
+              const pnlPts = Number(t.pnl_points || 0);
+              const pnlAmt = Number(t.pnl_amount || 0);
+              const isProfit = pnlPts > 0;
+              const isLoss = pnlPts < 0;
+              const pnlColor = isProfit ? 'var(--green)' : isLoss ? 'var(--red)' : 'var(--text-muted)';
+
+              trHtml += `
+                <tr>
+                  <td style="text-align:left;">#${Number(t.id)} <span class="status-badge ${t.is_mock ? 'status-mock' : ''}">${escapeHtml(t.option_type)}</span></td>
+                  <td>${Number(t.strike)}</td>
+                  <td>${Number(t.entry_price).toFixed(2)}</td>
+                  <td>${Number(t.current_price).toFixed(2)}</td>
+                  <td style="color:${pnlColor}; font-weight:700;">${pnlPts > 0 ? '+' : ''}${pnlPts.toFixed(2)}</td>
+                  <td style="color:${pnlColor}; font-weight:700;">${pnlAmt > 0 ? '+' : ''}${pnlAmt.toFixed(2)}</td>
+                  <td><span class="status-badge ${t.status === 'OPEN' ? 'status-active' : ''}">${escapeHtml(t.status)}</span></td>
+                  <td style="text-align:left;">${formatIST(t.opened_at)}</td>
+                </tr>`;
+            });
+            tBody.innerHTML = trHtml;
+          }
+        }
+
+        // 6. Logs
+        const resLogs = await fetch('/api/logs');
+        if (resLogs.ok) {
+          const logs = await resLogs.json();
+          const term = document.getElementById('logTerminal');
+          if (logs.length === 0) {
+            term.innerHTML = '<span style="color:#10b981;">No active WARNING or ERROR entries in runtime log files.</span>';
+          } else {
+            term.innerHTML = logs.map(l => {
+              const cl = l.includes('ERROR') ? 'log-line-err' : 'log-line-warn';
+              return `<div class="${cl}">${escapeHtml(l)}</div>`;
+            }).join('');
+            term.scrollTop = term.scrollHeight;
+          }
+        }
+
+      } catch (err) {
+        console.error('Dashboard poll error:', err);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initChart();
+      fetchData();
+      setInterval(fetchData, 15000);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "instrument": "NIFTY-FUT",
+  "timeframe": "5m",
+  "url": "https://dext.dhan.co/dashboard",
+  "timestamp": "2026-10-14T05:05:23.599168+00:00",
+  "screenshot_path": "screenshots\\footprint\\20261014_103523_order_flow.png",
+  "file_size_bytes": 125260,
+  "status": "CAPTURED"
+}

@@ -1,0 +1,15 @@
+{
+  "last_cycle": "2026-10-15T07:05:00.017640+00:00",
+  "status": "SUCCESS",
+  "source": "LIVE",
+  "signal": "NO_TRADE",
+  "confidence": 0.068,
+  "underlying_price": 22987.75,
+  "strike": null,
+  "entry_price": null,
+  "of_screenshot": [
+    "screenshots\\footprint\\20261015_123528_order_flow_15m.png",
+    "screenshots\\footprint\\20261015_123528_order_flow_5m.png"
+  ],
+  "oc_screenshot": "screenshots\\option_chain\\20261015_123554_option_chain_main.png"
+}

@@ -1,0 +1,10 @@
+{
+  "instrument": "NIFTY",
+  "url": "https://dext.dhan.co/dashboard",
+  "timestamp": "2026-10-12T06:30:28.859291+00:00",
+  "screenshots": [
+    "screenshots\\option_chain\\20261012_120028_option_chain_main.png"
+  ],
+  "file_size_bytes": 279552,
+  "status": "CAPTURED"
+}

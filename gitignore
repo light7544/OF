@@ -1,0 +1,19 @@
+# Automation browser profile (contains cookies and active session tokens)
+browser_profile/
+data/browser_state/
+
+# Local database and captured screenshots
+data/signals.db
+data/screenshots/
+
+# Python cache & artifacts
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.env
+.env.*
+!.env.example
+
+# System artifacts
+.system_generated/

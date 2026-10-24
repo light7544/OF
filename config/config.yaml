@@ -1,0 +1,58 @@
+browser:
+  url: "https://dext.dhan.co/dashboard"
+  user_data_dir: "./browser_profile/dext3_automation"
+  headless: false
+  timeout_ms: 30000
+  viewport:
+    width: 1920
+    height: 1080
+  selectors:
+    widgets_button: "button:has-text('+ Widgets'), [aria-label*='Widget'], div:has-text('+ Widgets')"
+    order_flow_tab: "button:has-text('Order Flow'), div[role='tab']:has-text('Order Flow'), span:has-text('Order Flow')"
+    chart_tab: "button:has-text('Chart'), div[role='tab']:has-text('Chart'), span:has-text('Chart')"
+    order_flow_container: "div.orderflow-container, div[data-widget='order-flow'], div.chart-container, canvas"
+    option_chain_widget: "div[data-widget='option-chain'], div.option-chain-container, div:has-text('Option Chain')"
+    option_chain_greeks_toggle: "button:has-text('Greeks'), input[name='greeks-toggle'], div:has-text('Greeks')"
+    login_indicator: "button:has-text('Sign In'), button:has-text('Log in'), form[action*='login']"
+    user_avatar: "[aria-label*='Account'], [aria-label*='Profile'], div.user-profile, span:has-text('Funds')"
+
+scheduler:
+  timezone: "Asia/Kolkata"
+  market_start_time: "09:15"
+  market_end_time: "15:30"
+  interval_minutes: 5
+
+storage:
+  database_path: "data/signals.db"
+  screenshots_dir: "screenshots"
+
+signals:
+  min_confidence: 0.65
+  weights:
+    order_flow_cumulative_delta: 0.35
+    option_chain_buildup: 0.35
+    pcr_trend: 0.15
+    max_pain_drift: 0.15
+    angel_chain: 0.0
+
+trade_management:
+  target1_points: 12.0
+  trailing_step_points: 8.0
+  stop_loss_points: 15.0
+  lot_size: 75
+  max_risk_per_trade: 2000.0
+  daily_loss_limit: 5000.0
+  max_open_trades: 2
+
+vision:
+  provider: "anthropic"
+  model: "claude-3-5-sonnet-20241022"
+  max_tokens: 2500
+  temperature: 0.0
+  mock_mode: false
+
+notifications:
+  telegram_bot_token: ""
+  telegram_chat_id: ""
+  webhook_url: ""
+  console_output: true
